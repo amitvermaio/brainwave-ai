@@ -27,7 +27,10 @@ router.post('/reset-password/:token', resetPasswordRules, resetPassword);
 
 router.post('/oauth', oauthRules, oauthLogin);
 
-router.get('/me', authenticate, getMe);
-router.post('/change-password', authenticate, changePasswordRules, changePassword);
+// Protected routes
+router.use(authenticate);
+
+router.get('/me', getMe);
+router.post('/change-password', changePasswordRules, changePassword);
 
 export default router;

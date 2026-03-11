@@ -11,6 +11,9 @@ const config = {
   imagekitPublicKey: process.env.IMAGEKIT_PUBLIC_KEY,
   imagekitPrivateKey: process.env.IMAGEKIT_PRIVATE_KEY,
   imagekitUrlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  pineconeApiKey: process.env.PINECONE_API_KEY,
+  pineconeIndexName: process.env.PINECONE_INDEX_NAME || 'ai-app',
+  googleApiKey: process.env.GOOGLE_API_KEY,
 };
 
 export default config;
