@@ -7,7 +7,7 @@ import {
   explainConcept,
   getChatHistory,
 } from '../controllers/ai.controller.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
