@@ -6,6 +6,7 @@ import AuthWrapper from './components/auth/AuthWrapper';
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Dashboard from './pages/dashboard/Dashboard';
 import DocumentList from './pages/documents/DocumentList';
 import DocumentDetails from './pages/documents/DocumentDetails';
@@ -24,6 +25,7 @@ const App = () => {
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route element={<AuthWrapper />}>
           <Route path="/dashboard" element={<Dashboard />} />

@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: '' },
   provider: { type: String, enum: ['local', 'google', 'github'], default: 'local' },
   providerId: { type: String, default: null },
+  isVerified: { type: Boolean, default: false },
   resetPasswordToken: { type: String, select: false },
   resetPasswordExpires: { type: Date, select: false },
 }, { timestamps: true });
