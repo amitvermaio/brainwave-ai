@@ -6,12 +6,12 @@ import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables
 import { pineconeIndex } from '../config/pinecone.js';
 
 export const embeddings = new GoogleGenerativeAIEmbeddings({
-  apiKey: config.GOOGLE_API_KEY,
+  apiKey: config.googleApiKey,
   model: "gemini-embedding-001",
 });
 
 export const llm = new ChatGoogleGenerativeAI({
-  apiKey: config.GOOGLE_API_KEY,
+  apiKey: config.googleApiKey,
   model: "gemini-2.5-flash",
   temperature: 0.5,
 });
