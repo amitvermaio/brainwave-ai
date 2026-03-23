@@ -1,7 +1,12 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 import AuthWrapper from './components/auth/AuthWrapper';
+
+import { asyncloaduser } from './store/actions/authActions';
+import { asyncgetdocuments } from './store/actions/documentActions';
+import { asyncgetdashboard } from './store/actions/progressActions';
 
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
@@ -18,6 +23,32 @@ import Profile from './pages/profile/Profile';
 import NotFound from './pages/NotFound';
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  const { isAuthenticated, status: authStatus } = useSelector((state) => state.auth);
+  const documentsStatus = useSelector((state) => state.document.status);
+  const progressStatus = useSelector((state) => state.progress.status);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && !isAuthenticated && authStatus === 'idle') {
+      dispatch(asyncloaduser());
+    }
+  }, [dispatch]);
+
+  React.useEffect(() => {
+    if (isAuthenticated && authStatus === 'succeeded' && progressStatus === 'idle') {
+      dispatch(asyncgetdashboard());
+    }
+  }, [dispatch, isAuthenticated, authStatus, progressStatus]);
+
+  React.useEffect(() => {
+    if (isAuthenticated && authStatus === 'succeeded' && documentsStatus === 'idle') {
+      dispatch(asyncgetdocuments());
+    }
+  }, [dispatch, isAuthenticated, authStatus, documentsStatus]);
+
+
   return (
     <Router>
       <Routes>
