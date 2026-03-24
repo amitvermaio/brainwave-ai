@@ -12,6 +12,8 @@ const documentSchema = new mongoose.Schema({
   extractedText: { type: String, default: '' },
   uploadDate: { type: Date, default: Date.now },
   lastAccessed: { type: Date, default: Date.now },
+  flashcardCount: { type: Number, default: 0 },
+  quizCount: { type: Number, default: 0 },
   status: { type: String, enum: ['processing', 'ready', 'failed'], default: 'processing' }
 }, { timestamps: true });
 

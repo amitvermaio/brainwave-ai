@@ -61,6 +61,9 @@ export const generateFlashcards = async (req, res, next) => {
       })),
     });
 
+    document.flashcardCount = document.flashcardCount + 1;
+    await document.save();
+
     res.status(201).json(new ApiResponse(
       201,
       flashcardSet,
@@ -126,6 +129,9 @@ export const generateQuiz = async (req, res, next) => {
       userAnswers: [],
       score: 0
     });
+
+    document.quizCount = document.quizCount + 1;
+    await document.save();
 
     const quizToSend = questions.map((q, index) => ({
       questionId: index + 1,
