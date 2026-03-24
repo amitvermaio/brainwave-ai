@@ -1,7 +1,5 @@
 import { config as dotenvConfig } from "dotenv";
 
-// 2:47:12
-
 dotenvConfig();
 
 const config = {
