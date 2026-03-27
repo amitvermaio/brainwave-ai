@@ -47,14 +47,29 @@ export const asyncgeneratesummary = (payload) => async (dispatch) => {
 	try {
 		dispatch(setailoading());
 		const { data } = await api.post('/ai/generate-summary', payload);
-		dispatch(setaisummary(extractdata(data)));
-		toast.success('Summary generated successfully');
-		return true;
+		const response = extractdata(data);
+		dispatch(setaisummary(response));
+		return response; // ✅ IMPORTANT
 	} catch (error) {
 		const message = error.response?.data?.message || 'Failed to generate summary';
 		dispatch(setaierror(message));
 		toast.error(message);
-		return false;
+		return null;
+	}
+};
+
+export const asyncexplainconcept = (payload) => async (dispatch) => {
+	try {
+		dispatch(setailoading());
+		const { data } = await api.post('/ai/explain-concept', payload);
+		const response = extractdata(data);
+		dispatch(setaiexplanation(response));
+		return response; // ✅ IMPORTANT
+	} catch (error) {
+		const message = error.response?.data?.message || 'Failed to explain concept';
+		dispatch(setaierror(message));
+		toast.error(message);
+		return null;
 	}
 };
 
@@ -84,19 +99,6 @@ export const asyncgetchathistory = (documentId) => async (dispatch) => {
 		return true;
 	} catch (error) {
 		const message = error.response?.data?.message || 'Failed to fetch chat history';
-		dispatch(setaierror(message));
-		toast.error(message);
-		return false;
-	}
-};
-export const asyncexplainconcept = (payload) => async (dispatch) => {
-	try {
-		dispatch(setailoading());
-		const { data } = await api.post('/ai/explain-concept', payload);
-		dispatch(setaiexplanation(extractdata(data)));
-		return true;
-	} catch (error) {
-		const message = error.response?.data?.message || 'Failed to explain concept';
 		dispatch(setaierror(message));
 		toast.error(message);
 		return false;

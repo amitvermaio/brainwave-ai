@@ -160,6 +160,14 @@ export const generateSummary = async (req, res, next) => {
       return next(new AppError('Document not found', 404));
     }
 
+    if (document.summary) {
+      return res.status(200).json(new ApiResponse(
+        200,
+        { summary: document.summary, documentId: document._id, title: document.title },
+        'Summary retrieved successfully'
+      ));
+    }
+
     const SUMMARY_PROMPT = `
       You are an expert summarizer. Read the document below and produce a clear, structured summary.
 
@@ -175,6 +183,9 @@ export const generateSummary = async (req, res, next) => {
     const summary = await runChain(SUMMARY_PROMPT, {
       context: document.extractedText.slice(0, 15000)
     })
+
+    document.summary = summary;
+    await document.save();
 
     res.status(200).json(new ApiResponse(
       200,

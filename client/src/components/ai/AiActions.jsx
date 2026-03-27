@@ -14,14 +14,17 @@ const AiActions = () => {
   const [modalContent, setModalContent] = useState('');
   const [modalTitle, setModalTitle] = useState('');
   const [concept, setConcept] = useState('');
-  const { summary } = useSelector((state) => state.document);
+  const { summary } = useSelector((state) => state.ai);
 
   const handleGenerateSummary = async () => {
     setLoadingAction('summary');
     try {
-      await dispatch(asyncgeneratesummary(id));
+      const res = await dispatch(
+        asyncgeneratesummary({ documentId: id }) // ✅ FIX
+      );
+
       setModalTitle('Document Summary');
-      setModalContent(summary);
+      setModalContent(res?.summary || 'No summary generated'); // ✅ FIX
       setIsModalOpen(true);
     } catch (error) {
       console.error('Error generating summary:', error);
@@ -30,18 +33,26 @@ const AiActions = () => {
     }
   };
 
-  const handleExplainConcept = () => {
+  const handleExplainConcept = async (e) => {
+    e.preventDefault();
+
     if (!concept.trim()) {
       alert('Please enter a concept to explain.');
       return;
     }
+
     setLoadingAction('explain');
     try {
-      dispatch(asyncexplainconcept(id, concept)).then((explanation) => {
-        setModalTitle(`Explanation of "${concept}"`);
-        setModalContent(explanation);
-        setIsModalOpen(true);
-      });
+      const res = await dispatch(
+        asyncexplainconcept({
+          documentId: id,
+          concept,
+        })
+      );
+
+      setModalTitle(`Explanation of "${concept}"`);
+      setModalContent(res?.explanation || 'No explanation found'); // ✅ FIX
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error explaining concept:', error);
     } finally {
@@ -61,7 +72,12 @@ const AiActions = () => {
               <h3 className='text-lg font-semibold text-slate-900'>
                 AI Assistant
               </h3>
-              <p className='text-xs text-slate-600'>Powered by GOOGLE GEMINI</p>
+              <div className="flex items-center gap-2 mt-1">
+
+                <p className="text-xs font-medium text-slate-600 tracking-wide">
+                  Powered by <span className="text-slate-900 font-semibold">Google Gemini</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -94,7 +110,7 @@ const AiActions = () => {
                       Loading...
                     </div>
                   </span>
-                ): (
+                ) : (
                   "Summarize"
                 )}
               </button>
@@ -119,8 +135,8 @@ const AiActions = () => {
                 Enter a topic or concept from the document to get a detailed explanation.
               </p>
               <div className='flex items-center gap-3'>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={concept}
                   onChange={(e) => setConcept(e.target.value)}
                   placeholder="e.g., What is Fine Tuning?"
