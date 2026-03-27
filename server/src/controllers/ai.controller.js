@@ -213,8 +213,10 @@ export const chat = async (req, res, next) => {
     const context = buildContext(chunks);
     const chunkIndices = chunks.map(chunk => chunk.chunkIndex);
 
-    const recentMessages = chatHistory.messages.slice(-6).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
-    
+    const recentMessages = chatHistory.messages
+      .slice(-6)
+      .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+      .join('\n');
 
     const CHAT_PROMPT = `
       You are a helpful assistant answering questions about a specific document.
@@ -238,20 +240,38 @@ export const chat = async (req, res, next) => {
     });
 
     chatHistory.messages.push(
-      { role: 'user', content: query, timestamp: new Date(), relevantChunks: chunkIndices },
+      {
+        role: 'user',
+        content: query,
+        timestamp: new Date(),
+        relevantChunks: chunkIndices
+      },
+      {
+        role: 'assistant',
+        content: answer,
+        timestamp: new Date(),
+        relevantChunks: chunkIndices
+      }
     );
 
     await chatHistory.save();
 
-    res.status(200).json(new ApiResponse(
-      200,
-      {question: query, answer, chatId: chatHistory._id, relevantChunks: chunkIndices},
-      'Chat Response generated'
-    ));
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          question: query,
+          answer,
+          chatId: chatHistory._id,
+          relevantChunks: chunkIndices
+        },
+        'Chat Response generated'
+      )
+    );
   } catch (error) {
     next(error);
   }
-}
+};
 
 // @desc Explain concept from document
 export const explainConcept = async (req, res, next) => {

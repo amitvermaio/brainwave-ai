@@ -7,6 +7,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import Tabs from '../../components/common/Tabs';
 import ChatInterface from '../../components/chat/ChatInterface';
+import AiActions from '../../components/ai/AiActions';
 
 const DocumentDetails = () => {
   const dispatch = useDispatch();
@@ -64,7 +65,7 @@ const DocumentDetails = () => {
   }
 
   const renderAIActions = () => {
-    return "Render AI actions here";
+    return <AiActions />;
   }
 
   const renderFlashcardsTab = () => {
