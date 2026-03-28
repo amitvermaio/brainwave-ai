@@ -47,7 +47,6 @@ export const asyncreviewflashcard = (cardId) => async (dispatch) => {
 		const { data } = await api.post(`/flashcards/${cardId}/review`);
 		const response = extractdata(data);
 		dispatch(setflashcards(response?.cards || []));
-		toast.success('Flashcard reviewed successfully');
 		return true;
 	} catch (error) {
 		const message =

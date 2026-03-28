@@ -1,18 +1,106 @@
 import { useState } from 'react';
+import { Star, RotateCcw } from 'lucide-react';
 
-const Flashcard = ({ card }) => {
+const Flashcard = ({ flashcard, onToggleStar }) => {
 	const [flipped, setFlipped] = useState(false);
 
-	if (!card) return null;
+	const handleFlip = () => {
+		setFlipped((prev) => !prev);
+	};
 
 	return (
-		<div
-			onClick={() => setFlipped(!flipped)}
-			className="cursor-pointer w-full max-w-xl mx-auto h-64 flex items-center justify-center rounded-2xl shadow-lg bg-white border border-slate-200 p-6 text-center transition-all"
-		>
-			<p className="text-lg font-medium text-slate-800">
-				{flipped ? card.answer : card.question}
-			</p>
+		<div className='relative w-full h-72' style={{ perspective: '1000px' }}>
+			<div
+				className='relative w-full h-full transition-transform duration-500 transform-gpu cursor-pointer'
+				style={{
+					transformStyle: 'preserve-3d',
+					transform: flipped ? 'rotateY(180deg)' : 'rotateX(0deg)'
+				}}
+				onClick={handleFlip}
+			>
+				{/* FRONT */}
+				<div
+					className='absolute inset-0 bg-white/80 backdrop-blur-xl border-2 border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col justify-between'
+					style={{
+						backfaceVisibility: 'hidden',
+						WebkitBackfaceVisibility: 'hidden'
+					}}
+				>
+					<div className='flex items-start justify-between'>
+						<div className='bg-slate-100 text-[10px] text-slate-600 rounded px-4 py-1 uppercase'>
+							{flashcard.difficulty}
+						</div>
+
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								onToggleStar(flashcard._id);
+							}}
+							className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${flashcard.isStarred
+									? 'bg-linear-to-br from-amber-400 to-yellow-500 text-white shadow-lg shadow-amber-500/25'
+									: 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-amber-500'
+								}`}
+						>
+							<Star
+								className='w-4 h-4'
+								strokeWidth={2.5}
+								fill={flashcard.isStarred ? 'currentColor' : 'none'}
+							/>
+						</button>
+					</div>
+
+					<div className='flex-1 flex items-center justify-center px-4 py-4'>
+						<p className='text-lg font-semibold text-slate-900 text-center'>
+							{flashcard.question}
+						</p>
+					</div>
+
+					<div className='flex items-center justify-center gap-2 text-xs text-slate-400 font-medium'>
+						<RotateCcw className='w-3.5 h-3.5' />
+						<span>Click to reveal answer</span>
+					</div>
+				</div>
+
+				{/* BACK */}
+				<div
+					className='absolute inset-0 bg-linear-to-br from-emerald-500 to-teal-500 border-2 border-emerald-400/60 rounded-2xl shadow-xl p-8 flex flex-col justify-between'
+					style={{
+						backfaceVisibility: 'hidden',
+						WebkitBackfaceVisibility: 'hidden',
+						transform: 'rotateY(180deg)'
+					}}
+				>
+					<div className='flex justify-end'>
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								onToggleStar(flashcard._id);
+							}}
+							className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${flashcard.isStarred
+									? 'bg-white/30 text-white border border-white/40'
+									: 'bg-white/20 text-white/70 hover:bg-white/30 hover:text-white border border-white/20'
+								}`}
+						>
+							<Star
+								className='w-4 h-4'
+								strokeWidth={2}
+								fill={flashcard.isStarred ? 'currentColor' : 'none'}
+							/>
+						</button>
+					</div>
+
+					<div className='flex-1 flex items-center justify-center px-4'>
+						<p className='text-white text-center'>
+							{flashcard.answer}
+						</p>
+					</div>
+
+					<div className='flex items-center justify-center gap-2 text-xs text-white/70'>
+						<RotateCcw className='w-3.5 h-3.5' />
+						<span>Click to see question</span>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 };
