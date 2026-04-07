@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   asyncgetquizzes,
-  asyncgetquizbyid,
-  asyncsubmitquiz,
-  asyncgetquizresults,
   asyncdeletequiz
 } from '../../store/actions/quizActions';
 import { asyncgeneratequiz } from '../../store/actions/aiActions';
@@ -18,10 +15,8 @@ import { toast } from 'sonner';
 
 const QuizManager = ({ documentId }) => {
   const dispatch = useDispatch();
-
   const { quizzes, status } = useSelector((state) => state.quiz);
 
-  const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [numQuestions, setNumQuestions] = useState(5);
@@ -48,16 +43,16 @@ const QuizManager = ({ documentId }) => {
     } finally {
       setGenerating(false);
     }
-  }
+  };
 
   const handleDeleteRequest = (quiz) => {
     setSelectedQuiz(quiz);
     setIsDeleteModalOpen(true);
-  }
+  };
 
   const handleConfirmDelete = async () => {
     if (!selectedQuiz) return;
-    setDeleting(true)
+    setDeleting(true);
     try {
       await dispatch(asyncdeletequiz(selectedQuiz._id));
       toast.success(`${selectedQuiz.title || 'Quiz'} deleted.`);
@@ -69,20 +64,20 @@ const QuizManager = ({ documentId }) => {
     } finally {
       setDeleting(false);
     }
-  }
+  };
 
   const renderQuizContent = () => {
     if (status === 'loading') {
       return <Spinner />;
     }
 
-    if (quizzes.length === 0) {
+    if (!quizzes || quizzes.length === 0) {
       return (
         <EmptyState
           title="No Quizzes Yet."
           description="Generate a quiz from your document to test your knowledge."
         />
-      )
+      );
     }
 
     return (
@@ -91,8 +86,8 @@ const QuizManager = ({ documentId }) => {
           <QuizCard key={quiz._id} quiz={quiz} onDelete={handleDeleteRequest} />
         ))}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className='bg-white border border-neutral-200 rounded-lg p-6'>
@@ -105,10 +100,11 @@ const QuizManager = ({ documentId }) => {
 
       {renderQuizContent()}
 
+      {/* Generate Modal */}
       <Modal
         isOpen={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
-        title={"Generate New Quiz"}
+        title="Generate New Quiz"
       >
         <form onSubmit={handleGenerateQuiz} className='space-y-4'>
           <div>
@@ -125,7 +121,6 @@ const QuizManager = ({ documentId }) => {
               className='w-full h-9 px-3 border border-neutral-200 rounded-lg bg-white text-sm text-neutral-900 placeholder-neutral-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#00d492] focus:border-transparent'
             />
           </div>
-
           <div className='flex justify-end gap-2 pt-2'>
             <Button
               type='button'
@@ -135,25 +130,26 @@ const QuizManager = ({ documentId }) => {
             >
               Cancel
             </Button>
-
-            <Button
-              type='submit'
-              disabled={generating}
-            >
+            <Button type='submit' disabled={generating}>
               {generating ? 'Generating...' : 'Generate'}
             </Button>
           </div>
         </form>
       </Modal>
 
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title={"Confirm Delete Quiz"}
+        title="Confirm Delete Quiz"
       >
         <div className='space-y-4'>
           <p className='text-sm text-neutral-600'>
-            Are you sure you want to delete the quiz: <span className='font-semibold text-neutral-900'>{selectedQuiz?.title || 'this quiz'} This action cannot be undone.</span>
+            Are you sure you want to delete{' '}
+            <span className='font-semibold text-neutral-900'>
+              {selectedQuiz?.title || 'this quiz'}
+            </span>
+            ? This action cannot be undone.
           </p>
           <div className='flex justify-end gap-2 pt-2'>
             <Button
@@ -175,7 +171,7 @@ const QuizManager = ({ documentId }) => {
         </div>
       </Modal>
     </div>
-  )
-}
+  );
+};
 
 export default QuizManager;
