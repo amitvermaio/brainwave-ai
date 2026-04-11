@@ -95,22 +95,31 @@ const FlashcardManager = ({ documentId }) => {
       console.error('Error reviewing flashcard:', error);
     }
   };
+
   const handleToggleStar = async (cardId) => {
+    // Optimistically update selectedSet locally first
+    setSelectedSet((prev) => ({
+      ...prev,
+      cards: prev.cards.map((card) =>
+        card._id === cardId ? { ...card, isStarred: !card.isStarred } : card
+      ),
+    }));
+
     try {
       await dispatch(asynctogglestarflashcard(cardId));
-
+      // Sync with server state after success
       await dispatch(asyncgetallflashcardsets());
-
-      const updatedSet = flashcardsets.find(
-        (set) => set._id === selectedSet._id
-      );
-
-      if (updatedSet) {
-        setSelectedSet(updatedSet);
-      }
-
+      const updatedSet = flashcardsets.find((set) => set._id === selectedSet._id);
+      if (updatedSet) setSelectedSet(updatedSet);
     } catch (error) {
       console.error('Error toggling star:', error);
+      // Revert on failure
+      setSelectedSet((prev) => ({
+        ...prev,
+        cards: prev.cards.map((card) =>
+          card._id === cardId ? { ...card, isStarred: !card.isStarred } : card
+        ),
+      }));
     }
   };
 

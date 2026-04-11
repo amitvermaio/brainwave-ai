@@ -12,13 +12,11 @@ const DocumentList = () => {
   const { documents, loading } = useSelector(state => state.document);
   const dispatch = useDispatch();
 
-  // State for Upload Modal
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
   const [uploadFile, setUploadFile] = React.useState(null);
   const [uploadTitle, setUploadTitle] = React.useState('');
   const [uploading, setUploading] = React.useState(false);
-
-  // State for Delete Confirmation Modal
+  
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [selectedDoc, setSelectedDoc] = React.useState(null);

@@ -14,8 +14,9 @@ const Button = ({
   const variantStyles = {
     primary: 'bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-300/50 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/60',
     secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-    outline: 'bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 ho=ver:border-slate-300',
-  }
+    outline: 'bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300',
+    danger: 'bg-linear-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-300/50 hover:from-red-600 hover:to-rose-600 hover:shadow-xl hover:shadow-red-500/60',
+  };
 
   const sizeStyles = {
     sm: 'h-9 px-4 text-xs',
