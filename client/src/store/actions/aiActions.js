@@ -8,7 +8,7 @@ import {
 	setaiexplanation,
 	setaiflashcards,
 	setaiquiz,
-	setaierror,
+	setaierror,	
 } from '../reducers/aiSlice';
 
 const extractdata = (responseData) => responseData?.data || responseData;
