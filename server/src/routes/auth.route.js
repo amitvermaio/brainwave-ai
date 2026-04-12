@@ -7,11 +7,15 @@ import {
   resetPassword,
   changePassword,
   oauthLogin,
+  verifyRegistrationOtp,
+  resendRegistrationOtp,
 } from '../controllers/auth.controller.js';
 import authenticate from '../middlewares/auth.middleware.js';
 import {
   registerRules,
   loginRules,
+  verifyRegistrationOtpRules,
+  resendRegistrationOtpRules,
   forgotPasswordRules,
   resetPasswordRules,
   changePasswordRules,
@@ -21,6 +25,8 @@ import {
 const router = Router();
 
 router.post('/register', registerRules, register);
+router.post('/verify-registration-otp', verifyRegistrationOtpRules, verifyRegistrationOtp);
+router.post('/resend-registration-otp', resendRegistrationOtpRules, resendRegistrationOtp);
 router.post('/login', loginRules, login);
 router.post('/forgot-password', forgotPasswordRules, forgotPassword);
 router.post('/reset-password/:token', resetPasswordRules, resetPassword);

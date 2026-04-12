@@ -4,6 +4,7 @@ import {
 	setauthloading,
 	setauthsuccess,
 	setautherror,
+	setauthpendingverification,
 	clearuser,
 } from '../reducers/authSlice';
 
@@ -13,15 +14,62 @@ export const asyncregisteruser = (payload) => async (dispatch) => {
 	try {
 		dispatch(setauthloading());
 		const { data } = await api.post('/auth/register', payload);
+		const registerData = extractdata(data);
+		const pendingEmail = registerData?.email || payload.email;
+
+		if (pendingEmail) {
+			localStorage.setItem('pendingVerificationEmail', pendingEmail);
+		}
+		localStorage.removeItem('token');
+
+		dispatch(setauthpendingverification({ email: pendingEmail }));
+		toast.success(data?.message || 'OTP sent to your email');
+		return { success: true, email: pendingEmail };
+	} catch (error) {
+		const message = error.response?.data?.message || 'Registration failed';
+		dispatch(setautherror(message));
+		toast.error(message);
+		return { success: false, email: null };
+	}
+};
+
+export const asyncverifyregistrationotp = (payload) => async (dispatch) => {
+	try {
+		dispatch(setauthloading());
+		const { data } = await api.post('/auth/verify-registration-otp', payload);
 		const authdata = extractdata(data);
+
 		if (authdata?.token) {
 			localStorage.setItem('token', authdata.token);
 		}
+		localStorage.removeItem('pendingVerificationEmail');
+
 		dispatch(setauthsuccess(authdata));
-		toast.success('Registration successful');
+		toast.success(data?.message || 'Email verified successfully');
 		return true;
 	} catch (error) {
-		const message = error.response?.data?.message || 'Registration failed';
+		const message = error.response?.data?.message || 'OTP verification failed';
+		dispatch(setautherror(message));
+		toast.error(message);
+		return false;
+	}
+};
+
+export const asyncresendregistrationotp = (payload) => async (dispatch) => {
+	try {
+		dispatch(setauthloading());
+		const { data } = await api.post('/auth/resend-registration-otp', payload);
+		const pendingEmail = payload?.email?.trim()?.toLowerCase() || null;
+
+		if (pendingEmail) {
+			localStorage.setItem('pendingVerificationEmail', pendingEmail);
+		}
+
+		dispatch(setauthpendingverification({ email: pendingEmail }));
+		toast.success(data?.message || 'A new OTP has been sent');
+		return true;
+	} catch (error) {
+		const message = error.response?.data?.message || 'Failed to resend OTP';
 		dispatch(setautherror(message));
 		toast.error(message);
 		return false;
@@ -36,6 +84,7 @@ export const asyncloginuser = (payload) => async (dispatch) => {
 		if (authdata?.token) {
 			localStorage.setItem('token', authdata.token);
 		}
+		localStorage.removeItem('pendingVerificationEmail');
 		dispatch(setauthsuccess(authdata));
 		toast.success('Login successful');
 		return true;
@@ -83,6 +132,7 @@ export const asyncresetpassword = (token, payload) => async (dispatch) => {
 		if (authdata?.token) {
 			localStorage.setItem('token', authdata.token);
 		}
+		localStorage.removeItem('pendingVerificationEmail');
 		dispatch(setauthsuccess(authdata));
 		toast.success('Password reset successful');
 		return true;
@@ -102,6 +152,7 @@ export const asyncchangepassword = (payload) => async (dispatch) => {
 		if (authdata?.token) {
 			localStorage.setItem('token', authdata.token);
 		}
+		localStorage.removeItem('pendingVerificationEmail');
 		dispatch(setauthsuccess(authdata));
 		toast.success('Password changed successfully');
 		return true;
@@ -121,6 +172,7 @@ export const asyncoauthlogin = (payload) => async (dispatch) => {
 		if (authdata?.token) {
 			localStorage.setItem('token', authdata.token);
 		}
+		localStorage.removeItem('pendingVerificationEmail');
 		dispatch(setauthsuccess(authdata));
 		toast.success('Login successful');
 		return true;
@@ -134,6 +186,7 @@ export const asyncoauthlogin = (payload) => async (dispatch) => {
 
 export const asynclogoutuser = () => async (dispatch) => {
 	localStorage.removeItem('token');
+	localStorage.removeItem('pendingVerificationEmail');
 	dispatch(clearuser());
 	toast.success('Logged out successfully');
 	return true;

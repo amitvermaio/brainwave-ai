@@ -24,6 +24,20 @@ export const loginRules = [
   validate,
 ];
 
+export const verifyRegistrationOtpRules = [
+  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('otp')
+    .trim()
+    .isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits')
+    .isNumeric().withMessage('OTP must contain only numbers'),
+  validate,
+];
+
+export const resendRegistrationOtpRules = [
+  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  validate,
+];
+
 export const forgotPasswordRules = [
   body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
   validate,

@@ -43,12 +43,14 @@ const Register = () => {
   const passwordValue = watch('password');
 
   const onSubmit = async (data) => {
-    const success = await dispatch(asyncregisteruser({
+    const result = await dispatch(asyncregisteruser({
       name: data.name,
       email: data.email,
       password: data.password,
     }));
-    if (success) navigate('/dashboard');
+    if (result?.success) {
+      navigate(`/verify-otp?email=${encodeURIComponent(result.email)}`);
+    }
   };
 
   return (
@@ -59,7 +61,7 @@ const Register = () => {
 
         {/* Mobile logo */}
         <div className='flex lg:hidden items-center gap-2.5 mb-10'>
-          <div className='w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200'>
+          <div className='w-8 h-8 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200'>
             <Brain className='w-4 h-4 text-white' strokeWidth={2} />
           </div>
           <span className='text-sm font-black text-slate-800 tracking-tight'>BrainWave AI</span>
@@ -154,7 +156,7 @@ const Register = () => {
             <button
               type='submit'
               disabled={isLoading}
-              className='w-full h-12 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 text-white text-sm font-bold rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-emerald-200 shimmer-btn mt-2'
+              className='w-full h-12 flex items-center justify-center gap-2 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 text-white text-sm font-bold rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-emerald-200 shimmer-btn mt-2'
             >
               {isLoading
                 ? <><Loader2 className='w-4 h-4 animate-spin' /> Creating account...</>
@@ -204,7 +206,7 @@ const Register = () => {
         <div className='relative z-10 max-w-sm text-center'>
           {/* Logo */}
           <div className='inline-flex items-center gap-3 mb-3'>
-            <div className='w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-900/50'>
+            <div className='w-10 h-10 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-900/50'>
               <Brain className='w-5 h-5 text-white' strokeWidth={2} />
             </div>
             <span className='text-base font-black text-white tracking-tight'>BrainWave AI</span>

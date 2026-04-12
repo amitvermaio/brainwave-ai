@@ -1,9 +1,38 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 import config from '../config/config.js';
 import AppError from '../utils/AppError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+import { sendVerificationOtpEmail } from '../utils/email.js';
+
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
+
+const generateOtp = () => String(crypto.randomInt(100000, 1000000));
+
+const hashValue = (value) => crypto.createHash('sha256').update(value).digest('hex');
+
+const runWithTransactionFallback = async (work) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let result;
+    await session.withTransaction(async () => {
+      result = await work(session);
+    });
+    return result;
+  } catch (error) {
+    const transactionsNotSupported = error?.message?.includes('Transaction numbers are only allowed on a replica set member or mongos');
+    if (!transactionsNotSupported) {
+      throw error;
+    }
+
+    return work();
+  } finally {
+    await session.endSession();
+  }
+};
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, config.jwtSecret, {
@@ -14,24 +43,63 @@ const generateToken = (userId) => {
 export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new AppError('Email already registered', 409);
-    }
+    const otp = generateOtp();
+    const emailVerificationOtpHash = hashValue(otp);
+    const emailVerificationOtpExpires = new Date(Date.now() + OTP_EXPIRY_MS);
 
-    const user = await User.create({ name, email, password, provider: 'local' });
+    const user = await runWithTransactionFallback(async (session) => {
+      const userQuery = User.findOne({ email: normalizedEmail });
+      if (session) {
+        userQuery.session(session);
+      }
+      const existingUser = await userQuery;
 
-    const token = generateToken(user._id);
+      if (existingUser && existingUser.isVerified) {
+        throw new AppError('Email already registered', 409);
+      }
+
+      if (existingUser && existingUser.provider !== 'local') {
+        throw new AppError(`Email already registered with ${existingUser.provider}`, 409);
+      }
+
+      if (existingUser) {
+        existingUser.name = name;
+        existingUser.password = password;
+        existingUser.provider = 'local';
+        existingUser.isVerified = false;
+        existingUser.emailVerificationOtpHash = emailVerificationOtpHash;
+        existingUser.emailVerificationOtpExpires = emailVerificationOtpExpires;
+        await existingUser.save({ session });
+        return existingUser;
+      }
+
+      const createdUsers = await User.create([
+        {
+          name,
+          email: normalizedEmail,
+          password,
+          provider: 'local',
+          isVerified: false,
+          emailVerificationOtpHash,
+          emailVerificationOtpExpires,
+        },
+      ], session ? { session } : undefined);
+
+      return createdUsers[0];
+    });
+
+    await sendVerificationOtpEmail({ to: user.email, name: user.name, otp });
 
     res.status(201).json(
       new ApiResponse(
         201,
         {
-          token,
-          user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
+          requiresVerification: true,
+          email: user.email,
         },
-        "User registered successfully"
+        'Registration started. Verify OTP to complete signup.'
       )
     );
   } catch (error) {
@@ -46,6 +114,10 @@ export const login = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password');
     if (!user || user.provider !== 'local') {
       throw new AppError('Invalid email or password', 401);
+    }
+
+    if (!user.isVerified) {
+      throw new AppError('Please verify your email before logging in', 403);
     }
 
     const isMatch = await user.comparePassword(password);
@@ -199,7 +271,7 @@ export const oauthLogin = async (req, res, next) => {
         throw new AppError(`Email already registered with ${existingUser.provider}`, 409);
       }
 
-      user = await User.create({ name, email, avatar, provider, providerId });
+      user = await User.create({ name, email, avatar, provider, providerId, isVerified: true });
     }
 
     const token = generateToken(user._id);
@@ -212,6 +284,95 @@ export const oauthLogin = async (req, res, next) => {
           user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, provider: user.provider },
         },
         "User logged in successfully"
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyRegistrationOtp = async (req, res, next) => {
+  try {
+    const normalizedEmail = req.body.email.trim().toLowerCase();
+    const { otp } = req.body;
+
+    const user = await User.findOne({ email: normalizedEmail, provider: 'local' })
+      .select('+emailVerificationOtpHash +emailVerificationOtpExpires');
+
+    if (!user) {
+      throw new AppError('Invalid OTP or email', 400);
+    }
+
+    if (!user.emailVerificationOtpHash || !user.emailVerificationOtpExpires || user.emailVerificationOtpExpires < new Date()) {
+      throw new AppError('OTP is invalid or expired', 400);
+    }
+
+    const otpHash = hashValue(otp);
+    if (user.emailVerificationOtpHash !== otpHash) {
+      throw new AppError('Invalid OTP', 400);
+    }
+
+    user.isVerified = true;
+    user.emailVerificationOtpHash = undefined;
+    user.emailVerificationOtpExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    const token = generateToken(user._id);
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          token,
+          user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
+        },
+        'Email verified. Registration completed successfully.'
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendRegistrationOtp = async (req, res, next) => {
+  try {
+    const normalizedEmail = req.body.email.trim().toLowerCase();
+
+    const user = await User.findOne({ email: normalizedEmail, provider: 'local' })
+      .select('+emailVerificationOtpHash +emailVerificationOtpExpires');
+
+    if (!user) {
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          null,
+          'If this email is pending verification, a new OTP has been sent.'
+        )
+      );
+    }
+
+    if (user.isVerified) {
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          null,
+          'Email is already verified. Please login.'
+        )
+      );
+    }
+
+    const otp = generateOtp();
+    user.emailVerificationOtpHash = hashValue(otp);
+    user.emailVerificationOtpExpires = new Date(Date.now() + OTP_EXPIRY_MS);
+    await user.save({ validateBeforeSave: false });
+
+    await sendVerificationOtpEmail({ to: user.email, name: user.name, otp });
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        { email: user.email },
+        'A new OTP has been sent to your email.'
       )
     );
   } catch (error) {

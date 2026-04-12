@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   token: localStorage.getItem('token') ?? null,
+  pendingVerificationEmail: localStorage.getItem('pendingVerificationEmail') ?? null,
   status: 'idle',
   error: null,
   isAuthenticated: false,
@@ -18,9 +19,19 @@ const authSlice = createSlice({
     },
     setauthsuccess: (state, action) => {
       state.user = action.payload?.user || action.payload || null;
+      state.token = action.payload?.token || state.token || localStorage.getItem('token') || null;
+      state.pendingVerificationEmail = null;
       state.status = 'succeeded';
       state.error = null;
       state.isAuthenticated = true;
+    },
+    setauthpendingverification: (state, action) => {
+      state.user = null;
+      state.token = null;
+      state.pendingVerificationEmail = action.payload?.email || null;
+      state.status = 'succeeded';
+      state.error = null;
+      state.isAuthenticated = false;
     },
     setautherror: (state, action) => {
       state.status = 'failed';
@@ -29,6 +40,7 @@ const authSlice = createSlice({
     clearuser: (state) => {
       state.user = null;
       state.token = null;
+      state.pendingVerificationEmail = null;
       state.status = 'idle';
       state.error = null;
       state.isAuthenticated = false;
@@ -37,4 +49,4 @@ const authSlice = createSlice({
 });
 
 export default authSlice.reducer;
-export const { setautherror, setauthloading, setauthsuccess, clearuser } = authSlice.actions;
+export const { setautherror, setauthloading, setauthsuccess, setauthpendingverification, clearuser } = authSlice.actions;
