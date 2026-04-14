@@ -2,17 +2,13 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true, maxlength: 50 },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, minlength: 6, select: false },
-  avatar: { type: String, default: '' },
-  provider: { type: String, enum: ['local', 'google', 'github'], default: 'local' },
+  name:       { type: String, required: true, trim: true, maxlength: 50 },
+  email:      { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password:   { type: String, minlength: 6, select: false },
+  avatar:     { type: String, default: '' },
+  provider:   { type: String, enum: ['local', 'google', 'github'], default: 'local' },
   providerId: { type: String, default: null },
-  isVerified: { type: Boolean, default: false },
-  emailVerificationOtpHash: { type: String, select: false },
-  emailVerificationOtpExpires: { type: Date, select: false },
-  resetPasswordToken: { type: String, select: false },
-  resetPasswordExpires: { type: Date, select: false },
+  isVerified: { type: Boolean, default: true },
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

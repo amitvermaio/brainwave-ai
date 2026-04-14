@@ -12,6 +12,13 @@ import {
 } from '../controllers/auth.controller.js';
 import authenticate from '../middlewares/auth.middleware.js';
 import {
+  registerLimiter,
+  loginLimiter,
+  otpLimiter,
+  forgotPasswordLimiter
+} from '../middlewares/rateLimit.middleware.js';
+
+import {
   registerRules,
   loginRules,
   verifyRegistrationOtpRules,
@@ -24,14 +31,14 @@ import {
 
 const router = Router();
 
-router.post('/register', registerRules, register);
-router.post('/verify-registration-otp', verifyRegistrationOtpRules, verifyRegistrationOtp);
-router.post('/resend-registration-otp', resendRegistrationOtpRules, resendRegistrationOtp);
-router.post('/login', loginRules, login);
-router.post('/forgot-password', forgotPasswordRules, forgotPassword);
-router.post('/reset-password/:token', resetPasswordRules, resetPassword);
+router.post('/register', registerLimiter, registerRules, register);
+router.post('/verify-registration-otp', otpLimiter, verifyRegistrationOtpRules, verifyRegistrationOtp);
+router.post('/resend-registration-otp', otpLimiter, resendRegistrationOtpRules, resendRegistrationOtp);
+router.post('/login', loginLimiter, loginRules, login);
+router.post('/forgot-password', forgotPasswordLimiter, forgotPasswordRules, forgotPassword);
+router.post('/reset-password/:token', forgotPasswordLimiter, resetPasswordRules, resetPassword);
 
-router.post('/oauth', oauthRules, oauthLogin);
+router.post('/oauth', loginLimiter, oauthRules, oauthLogin);
 
 // Protected routes
 router.use(authenticate);

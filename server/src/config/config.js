@@ -19,6 +19,8 @@ const config = {
   smtpPass: process.env.SMTP_PASS,
   smtpSecure: process.env.SMTP_SECURE === 'true',
   smtpFrom: process.env.SMTP_FROM,
+  upstashRedisRestUrl: process.env.UPSTASH_REDIS_REST_URL,
+  upstashRedisRestToken: process.env.UPSTASH_REDIS_REST_TOKEN
 };
 
 export default config;

@@ -9,6 +9,10 @@ import {
 } from '../controllers/ai.controller.js';
 import authenticate from '../middlewares/auth.middleware.js';
 import {
+  generateLimiter,
+  chatLimiter
+} from '../middlewares/rateLimit.middleware.js';
+import {
   generateFlashcardsRules,
   generateQuizRules,
   generateSummaryRules,
@@ -21,11 +25,11 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post('/generate-flashcards', generateFlashcardsRules, generateFlashcards);
-router.post('/generate-quiz', generateQuizRules, generateQuiz);
-router.post('/generate-summary', generateSummaryRules, generateSummary);
-router.post('/chat', chatRules, chat);
-router.post('/explain-concept', explainConceptRules, explainConcept);
+router.post('/generate-flashcards', generateLimiter, generateFlashcardsRules, generateFlashcards);
+router.post('/generate-quiz', generateLimiter, generateQuizRules, generateQuiz);
+router.post('/generate-summary', generateLimiter, generateSummaryRules, generateSummary);
+router.post('/chat', chatLimiter, chatRules, chat);
+router.post('/explain-concept', chatLimiter, explainConceptRules, explainConcept);
 router.get('/chat-history/:documentId', getChatHistoryRules, getChatHistory);
 
 export default router;
