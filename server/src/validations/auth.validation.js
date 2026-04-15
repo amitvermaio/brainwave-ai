@@ -13,19 +13,19 @@ export const validate = (req, res, next) => {
 
 export const registerRules = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }).withMessage('Name must be under 50 characters'),
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   validate,
 ];
 
 export const loginRules = [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   body('password').notEmpty().withMessage('Password is required'),
   validate,
 ];
 
 export const verifyRegistrationOtpRules = [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   body('otp')
     .trim()
     .isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits')
@@ -34,12 +34,12 @@ export const verifyRegistrationOtpRules = [
 ];
 
 export const resendRegistrationOtpRules = [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   validate,
 ];
 
 export const forgotPasswordRules = [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   validate,
 ];
 
@@ -57,7 +57,7 @@ export const changePasswordRules = [
 export const oauthRules = [
   body('provider').isIn(['google', 'github']).withMessage('Provider must be google or github'),
   body('providerId').notEmpty().withMessage('Provider ID is required'),
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   body('name').trim().notEmpty().withMessage('Name is required'),
   validate,
 ];

@@ -13,14 +13,15 @@ const extractdata = (responseData) => responseData?.data || responseData;
 export const asyncregisteruser = (payload) => async (dispatch) => {
 	try {
 		dispatch(setauthloading());
+
 		const { data } = await api.post('/auth/register', payload);
 		const registerData = extractdata(data);
+
 		const pendingEmail = registerData?.email || payload.email;
 
 		if (pendingEmail) {
 			localStorage.setItem('pendingVerificationEmail', pendingEmail);
 		}
-		localStorage.removeItem('token');
 
 		dispatch(setauthpendingverification({ email: pendingEmail }));
 		toast.success(data?.message || 'OTP sent to your email');
@@ -133,7 +134,6 @@ export const asyncresetpassword = (token, payload) => async (dispatch) => {
 			localStorage.setItem('token', authdata.token);
 		}
 		localStorage.removeItem('pendingVerificationEmail');
-		dispatch(setauthsuccess(authdata));
 		toast.success('Password reset successful');
 		return true;
 	} catch (error) {
