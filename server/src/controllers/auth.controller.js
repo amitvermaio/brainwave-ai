@@ -11,7 +11,6 @@ import {
   sendWelcomeEmail
 } from '../utils/email.js';
 
-
 const OTP_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SEC = 60;
 const MAX_OTP_ATTEMPTS = 5;
