@@ -13,14 +13,10 @@ const config = {
   googleApiKey: process.env.GOOGLE_API_KEY,
   azureStorageConnectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
   azureStorageContainerName: process.env.AZURE_STORAGE_CONTAINER_NAME,
-  smtpHost: process.env.SMTP_HOST,
-  smtpPort: Number(process.env.SMTP_PORT || 587),
-  smtpUser: process.env.SMTP_USER,
-  smtpPass: process.env.SMTP_PASS,
-  smtpSecure: process.env.SMTP_SECURE === 'true',
-  smtpFrom: process.env.SMTP_FROM,
   upstashRedisRestUrl: process.env.UPSTASH_REDIS_REST_URL,
-  upstashRedisRestToken: process.env.UPSTASH_REDIS_REST_TOKEN
+  upstashRedisRestToken: process.env.UPSTASH_REDIS_REST_TOKEN,
+  resendApiKey: process.env.RESEND_API_KEY,
+  resendFrom:   process.env.RESEND_FROM || 'onboarding@resend.dev'
 };
 
 export default config;

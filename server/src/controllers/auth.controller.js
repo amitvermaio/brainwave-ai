@@ -5,12 +5,12 @@ import redis from '../config/redis.js';
 import config from '../config/config.js';
 import AppError from '../utils/AppError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
-import { sendVerificationOtpEmail } from '../utils/email.js';
+import { sendVerificationOtpEmail, sendResetPasswordEmail } from '../utils/email.js';
 
 
-const OTP_TTL_SECONDS      = 10 * 60;      
-const RESEND_COOLDOWN_SEC  = 60;           
-const MAX_OTP_ATTEMPTS     = 5;            
+const OTP_TTL_SECONDS = 10 * 60;
+const RESEND_COOLDOWN_SEC = 60;
+const MAX_OTP_ATTEMPTS = 5;
 
 const generateOtp = () => String(crypto.randomInt(100000, 1000000));
 
@@ -20,9 +20,9 @@ const generateToken = (userId) =>
   jwt.sign({ id: userId }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
 
 const redisKeys = {
-  pending:  (email) => `pending_user:${email}`,   
-  cooldown: (email) => `otp_cooldown:${email}`,   
-  attempts: (email) => `otp_attempts:${email}`,  
+  pending: (email) => `pending_user:${email}`,
+  cooldown: (email) => `otp_cooldown:${email}`,
+  attempts: (email) => `otp_attempts:${email}`,
 };
 
 export const register = async (req, res, next) => {
@@ -45,16 +45,17 @@ export const register = async (req, res, next) => {
       redisKeys.pending(email),
       JSON.stringify({
         name,
-        email: normalizedEmail,
-        password,       
+        email,
+        password,
         otpHash: hashValue(otp),
       }),
       { ex: OTP_TTL_SECONDS }
     );
 
-    await redis.set(redisKeys.cooldown(normalizedEmail), '1', { ex: RESEND_COOLDOWN_SEC });
+    await redis.set(redisKeys.cooldown(email), '1', { ex: RESEND_COOLDOWN_SEC });
 
-    await sendVerificationOtpEmail({ to: email, name, otp });
+    sendVerificationOtpEmail({ to: email, name, otp })
+      .catch(err => console.error('OTP email failed:', err));
 
     res.status(201).json(
       new ApiResponse(201, { email: normalizedEmail }, 'OTP sent. Verify your email to complete registration.')
@@ -69,8 +70,8 @@ export const verifyRegistrationOtp = async (req, res, next) => {
     const normalizedEmail = req.body.email.trim().toLowerCase();
     const { otp } = req.body;
 
-    const pendingKey  = redisKeys.pending(normalizedEmail);
-    const attemptKey  = redisKeys.attempts(normalizedEmail);
+    const pendingKey = redisKeys.pending(normalizedEmail);
+    const attemptKey = redisKeys.attempts(normalizedEmail);
 
     const raw = await redis.get(pendingKey);
     if (!raw) {
@@ -79,7 +80,7 @@ export const verifyRegistrationOtp = async (req, res, next) => {
 
     const attempts = parseInt(await redis.get(attemptKey) ?? '0');
     if (attempts >= MAX_OTP_ATTEMPTS) {
-      await redis.del(pendingKey); 
+      await redis.del(pendingKey);
       throw new AppError('Too many incorrect attempts. Please register again.', 429);
     }
 
@@ -92,10 +93,10 @@ export const verifyRegistrationOtp = async (req, res, next) => {
     }
 
     const user = await User.create({
-      name:       pending.name,
-      email:      pending.email,
-      password:   pending.password,
-      provider:  'local',
+      name: pending.name,
+      email: pending.email,
+      password: pending.password,
+      provider: 'local',
       isVerified: true,
     });
 
@@ -225,7 +226,8 @@ export const forgotPassword = async (req, res, next) => {
       { ex: 60 * 60 }
     );
 
-    await sendResetPasswordEmail({ to: user.email, name: user.name, token: resetToken });
+    sendResetPasswordEmail({ to: user.email, name: user.name, token: resetToken })
+      .catch(err => console.error('Reset email failed:', err));
 
     res.status(200).json(
       new ApiResponse(200, null, 'If that email is registered, a reset link has been sent.')

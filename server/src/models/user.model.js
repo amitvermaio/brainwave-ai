@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email:      { type: String, required: true, unique: true, lowercase: true, trim: true },
   password:   { type: String, minlength: 6, select: false },
   avatar:     { type: String, default: '' },
-  provider:   { type: String, enum: ['local', 'google', 'github'], default: 'local' },
+  provider:   { type: String, enum: ['local', 'google'], default: 'local' },
   providerId: { type: String, default: null },
   isVerified: { type: Boolean, default: true },
 }, { timestamps: true });
