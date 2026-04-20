@@ -16,7 +16,9 @@ const config = {
   upstashRedisRestUrl: process.env.UPSTASH_REDIS_REST_URL,
   upstashRedisRestToken: process.env.UPSTASH_REDIS_REST_TOKEN,
   resendApiKey: process.env.RESEND_API_KEY,
-  resendFrom:   process.env.RESEND_FROM || 'onboarding@resend.dev'
+  resendFrom:   process.env.RESEND_FROM || 'onboarding@resend.dev',
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
 };
 
 export default config;

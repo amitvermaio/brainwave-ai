@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, User } from 'lucide-react';
 import { asyncregisteruser } from '../../store/actions/authActions';
+import { toast } from 'sonner';
 
 const InputField = ({ label, id, type = 'text', placeholder, registration, error, children }) => (
   <div className='space-y-1.5'>
@@ -59,6 +60,11 @@ const Register = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    toast.loading('Redirecting to Google...', { duration: 2000 });
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+  }
+
   return (
     <div className='min-h-screen bg-slate-50 flex items-center justify-center px-4'>
 
@@ -80,7 +86,8 @@ const Register = () => {
         {/* GOOGLE BUTTON */}
         <button
           type='button'
-          className='w-full h-11 flex items-center justify-center gap-3 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition mb-5'
+          className='w-full h-11 flex items-center justify-center gap-3 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition mb-5 cursor-pointer'
+          onClick={handleGoogleLogin}
         >
           <svg className='w-5 h-5' viewBox='0 0 24 24'>
             <path d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' fill='#4285F4'/>

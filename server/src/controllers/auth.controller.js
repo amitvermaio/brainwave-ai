@@ -301,33 +301,27 @@ export const changePassword = async (req, res, next) => {
 };
 
 
-export const oauthLogin = async (req, res, next) => {
+export const googleOAuth = async (req, res, next) => {
   try {
-    const { provider, providerId, email, name, avatar } = req.body;
+    const email = req.user.emails[0].value;
+    const googleId = req.user.id;
+    const name = req.user.displayName;
 
-    if (!['google'].includes(provider)) {
-      throw new AppError('Unsupported OAuth provider', 400);
-    }
-
-    let user = await User.findOne({ provider, providerId });
+    let user = await User.findOne({ email});
 
     if (!user) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        throw new AppError(`Email already registered with ${existingUser.provider}`, 409);
-      }
-      user = await User.create({ name, email, avatar, provider, providerId, isVerified: true });
+      user = await User.create({
+        name,
+        email,
+        provider: 'google',
+        providerId: googleId,
+        isVerified: true,
+      });
     }
 
     const token = generateToken(user._id);
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        { token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, provider: user.provider } },
-        'User logged in successfully'
-      )
-    );
+    return res.redirect(`${config.frontendUrl}/oauth-success?token=${token}`);
   } catch (error) {
     next(error);
   }

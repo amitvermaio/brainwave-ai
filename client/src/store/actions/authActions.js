@@ -115,7 +115,7 @@ export const asyncforgotpassword = (payload) => async (dispatch) => {
 		dispatch(setauthloading());
 		await api.post('/auth/forgot-password', payload);
 		toast.success('Reset link sent if email exists');
-		dispatch(setauthsuccess({ user: null }));
+		dispatch(setauthpendingverification({ email: null }));
 		return true;
 	} catch (error) {
 		const message = error.response?.data?.message || 'Failed to process forgot password';
@@ -128,12 +128,10 @@ export const asyncforgotpassword = (payload) => async (dispatch) => {
 export const asyncresetpassword = (token, payload) => async (dispatch) => {
 	try {
 		dispatch(setauthloading());
-		const { data } = await api.post(`/auth/reset-password/${token}`, payload);
-		const authdata = extractdata(data);
-		if (authdata?.token) {
-			localStorage.setItem('token', authdata.token);
-		}
+		await api.post(`/auth/reset-password/${token}`, payload);
+		localStorage.removeItem('token');
 		localStorage.removeItem('pendingVerificationEmail');
+		dispatch(clearuser());
 		toast.success('Password reset successful');
 		return true;
 	} catch (error) {

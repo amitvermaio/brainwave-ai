@@ -50,14 +50,9 @@ export const resetPasswordRules = [
 
 export const changePasswordRules = [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
-  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
-  validate,
-];
-
-export const oauthRules = [
-  body('provider').isIn(['google', 'github']).withMessage('Provider must be google or github'),
-  body('providerId').notEmpty().withMessage('Provider ID is required'),
-  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
-  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('newPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) throw new Error('Passwords do not match');
+    return true;
+  }),
   validate,
 ];

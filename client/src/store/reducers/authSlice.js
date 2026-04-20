@@ -18,12 +18,21 @@ const authSlice = createSlice({
       state.error = null;
     },
     setauthsuccess: (state, action) => {
-      state.user = action.payload?.user || action.payload || null;
-      state.token = action.payload?.token || state.token || localStorage.getItem('token') || null;
+      const payload = action.payload;
+      const hasExplicitUser = payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'user');
+      const hasUserShape = payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'email');
+
+      if (hasExplicitUser) {
+        state.user = payload.user ?? null;
+      } else if (hasUserShape) {
+        state.user = payload;
+      }
+
+      state.token = payload?.token || state.token || localStorage.getItem('token') || null;
       state.pendingVerificationEmail = null;
       state.status = 'succeeded';
       state.error = null;
-      state.isAuthenticated = true;
+      state.isAuthenticated = Boolean(state.user && state.token);
     },
     setauthpendingverification: (state, action) => {
       state.user = null;

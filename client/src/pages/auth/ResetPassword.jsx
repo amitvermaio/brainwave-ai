@@ -9,7 +9,8 @@ const ResetPassword = () => {
   const { token } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state) => state.auth);
+  const { status } = useSelector((state) => state.auth);
+  const isLoading = status === "loading";
   const [done, setDone] = useState(false);
 
   const {
@@ -111,10 +112,10 @@ const ResetPassword = () => {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full h-12 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 text-white text-sm font-bold rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-emerald-200 shimmer-btn mt-2"
               >
-                {loading
+                {isLoading
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
                   : <><ArrowRight className="w-4 h-4" strokeWidth={2.5} /> Update password</>
                 }

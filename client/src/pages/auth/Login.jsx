@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { asyncloginuser } from '../../store/actions/authActions';
+import { toast } from 'sonner';
 
 const InputField = ({ label, id, type = 'text', placeholder, registration, error, children }) => (
   <div className='space-y-1.5'>
@@ -18,8 +19,8 @@ const InputField = ({ label, id, type = 'text', placeholder, registration, error
         placeholder={placeholder}
         {...registration}
         className={`w-full pl-10 pr-4 py-3 text-sm bg-slate-50 border-2 rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 font-home ${error
-            ? 'border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-100'
-            : 'border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
+          ? 'border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-100'
+          : 'border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
           }`}
       />
     </div>
@@ -45,10 +46,13 @@ const Login = () => {
     if (success) navigate('/dashboard');
   };
 
+  const handleGoogleRegister = () => {
+    toast.loading('Redirecting to Google...');
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
+  }
+
   return (
     <div className='min-h-screen bg-slate-50 flex items-center justify-center px-4'>
-
-      {/* 🔥 CARD CONTAINER */}
       <div className='w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-8'>
 
         {/* Logo */}
@@ -63,10 +67,10 @@ const Login = () => {
         <h1 className='text-2xl font-black text-center mb-1'>Welcome back</h1>
         <p className='text-center text-sm text-slate-500 mb-6'>Sign in to continue</p>
 
-        {/* 🔥 GOOGLE BUTTON (UI ONLY) */}
         <button
           type='button'
-          className='w-full h-11 flex items-center justify-center gap-3 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition mb-5'
+          className='w-full h-11 flex items-center justify-center gap-3 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition mb-5 cursor-pointer'
+          onClick={handleGoogleRegister}
         >
           <svg className='w-5 h-5' viewBox='0 0 24 24'>
             <path d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' fill='#4285F4' />
