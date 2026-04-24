@@ -27,6 +27,7 @@ const Flashcard = lazy(() => import('./pages/flashcards/Flashcard'));
 
 const QuizTake = lazy(() => import('./pages/quiz/QuizTake'));
 const QuizResult = lazy(() => import('./pages/quiz/QuizResult'));
+const GeneralChat = lazy(() => import('./pages/chat/GeneralChat'));
 
 const Profile = lazy(() => import('./pages/profile/Profile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -81,6 +82,7 @@ const App = () => {
             <Route path="/flashcards/:id" element={<Flashcard />} />
             <Route path="/quiz/:quizId" element={<QuizTake />} />
             <Route path="/quiz/:quizId/results" element={<QuizResult />} />
+            <Route path="/chat" element={<GeneralChat />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 

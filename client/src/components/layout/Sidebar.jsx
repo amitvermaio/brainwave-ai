@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { asynclogoutuser } from '../../store/actions/authActions';
-import { LayoutDashboard, FileText, User, LogOut, BrainCircuit, BookOpen, X, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, FileText, User, LogOut, BrainCircuit, BookOpen, X, AlertTriangle, MessageCircleMore } from 'lucide-react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 
@@ -28,6 +28,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
   const navLinks = [
     { to: '/dashboard', icon: LayoutDashboard, text: 'Dashboard' },
     { to: '/documents', icon: FileText, text: 'Documents' },
+    { to: '/chat', icon: MessageCircleMore, text: 'General Chat' },
     { to: '/flashcards', icon: BookOpen, text: 'Flashcards' },
     { to: '/profile', icon: User, text: 'Profile' },
   ];
@@ -114,7 +115,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         <div className='space-y-6'>
           {/* Warning icon + message */}
           <div className='flex items-start gap-4'>
-            <div className='flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-red-50 border border-red-100'>
+            <div className='shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-red-50 border border-red-100'>
               <AlertTriangle className='w-5 h-5 text-red-500' strokeWidth={2} />
             </div>
             <div>
