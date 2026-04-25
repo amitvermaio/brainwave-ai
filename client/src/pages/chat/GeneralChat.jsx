@@ -11,8 +11,7 @@ const MODEL_UI = {
     accent: 'from-emerald-500 to-teal-500',
     strengths: ['Balanced', 'Clear answers', 'Reliable'],
     logoPath: '/nvidia-color.svg',
-    logoPlate:
-      'bg-[radial-gradient(circle_at_25%_20%,rgba(16,185,129,0.35),transparent_58%),radial-gradient(circle_at_80%_85%,rgba(20,184,166,0.28),transparent_62%),linear-gradient(135deg,rgba(236,253,245,1)_0%,rgba(240,253,250,1)_100%)] ring-emerald-200/80',
+    logoPlate: 'bg-white ring-slate-300',
   },
   fast: {
     name: 'GPT-OSS 120B',
@@ -21,8 +20,7 @@ const MODEL_UI = {
     accent: 'from-sky-500 to-cyan-500',
     strengths: ['Speed', 'Low latency', 'Quick drafts'],
     logoPath: '/openai.svg',
-    logoPlate:
-      'bg-[radial-gradient(circle_at_30%_18%,rgba(56,189,248,0.35),transparent_56%),radial-gradient(circle_at_78%_82%,rgba(34,211,238,0.28),transparent_60%),linear-gradient(135deg,rgba(239,246,255,1)_0%,rgba(236,254,255,1)_100%)] ring-sky-200/80',
+    logoPlate: 'bg-white ring-slate-300',
   },
 };
 
@@ -176,13 +174,13 @@ const GeneralChat = () => {
                     onClick={() => setSelectedModelId(model.id)}
                     className={`group min-w-52.5 rounded-2xl border px-3 py-2 text-left transition-all duration-200 ${
                       selected
-                        ? 'border-transparent bg-linear-to-r from-teal-50 to-cyan-50 shadow-sm shadow-teal-100 ring-1 ring-teal-200'
+                        ? 'border-slate-300 bg-slate-50 shadow-sm ring-1 ring-slate-200'
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <div className='flex items-start justify-between gap-2'>
                       <div className='min-w-0 flex items-start gap-2'>
-                        <span className={`mt-0.5 rounded-md p-1 ring-1 ${model.logoPlate || 'bg-slate-100 ring-slate-200'}`}>
+                        <span className={`mt-0.5 rounded-md p-1 ring-1 shadow-sm ${model.logoPlate || 'bg-white ring-slate-300'}`}>
                           <img src={model.logoPath} alt={`${model.name} logo`} className='h-3.5 w-3.5 object-contain' />
                         </span>
                         <div className='min-w-0'>
@@ -200,9 +198,8 @@ const GeneralChat = () => {
 
           <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3'>
             <div className='flex items-center gap-3'>
-              <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl ring-1 shadow-md ${selectedModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
-                <div className={`pointer-events-none absolute inset-0 rounded-xl bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} opacity-15`} />
-                <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='relative h-5 w-5 object-contain' />
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 shadow-sm ${selectedModel?.logoPlate || 'bg-white ring-slate-300'}`}>
+                <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-5 w-5 object-contain' />
               </div>
               <div>
                 <p className='text-sm font-semibold text-slate-900'>{selectedModel?.name}</p>
@@ -219,7 +216,7 @@ const GeneralChat = () => {
                 </span>
               ))}
             </div>
-            <div className={`hidden items-center gap-2 rounded-xl bg-linear-to-r ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} px-3 py-1.5 text-white shadow-sm sm:inline-flex`}>
+            <div className='hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-900 px-3 py-1.5 text-white shadow-sm sm:inline-flex'>
               <Bot className='h-3.5 w-3.5' />
               <span className='text-xs font-semibold'>Open Source</span>
             </div>
@@ -238,9 +235,8 @@ const GeneralChat = () => {
                       className={`flex items-start gap-3 my-2 ${isUser ? 'justify-end' : 'justify-start'} animate-[fadeIn_0.18s_ease-out]`}
                     >
                       {!isUser && (
-                        <div className={`relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${itemModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
-                          <div className={`pointer-events-none absolute inset-0 rounded-lg bg-linear-to-br ${itemModel?.accent || 'from-indigo-500 to-blue-500'} opacity-18`} />
-                          <img src={itemModel?.logoPath || '/vite.svg'} alt={`${itemModel?.name || 'Model'} logo`} className='relative h-4 w-4 object-contain' />
+                        <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${itemModel?.logoPlate || 'bg-white ring-slate-300'}`}>
+                          <img src={itemModel?.logoPath || '/vite.svg'} alt={`${itemModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
                         </div>
                       )}
 
@@ -279,9 +275,8 @@ const GeneralChat = () => {
 
                 {isResponding && (
                   <div className='flex items-center gap-3'>
-                    <div className={`relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${selectedModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
-                      <div className={`pointer-events-none absolute inset-0 rounded-lg bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} opacity-18`} />
-                      <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='relative h-4 w-4 object-contain' />
+                    <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${selectedModel?.logoPlate || 'bg-white ring-slate-300'}`}>
+                      <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
                     </div>
                     <div className='inline-flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white/95 px-4 py-3 shadow-sm'>
                       <span className='h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]' />
