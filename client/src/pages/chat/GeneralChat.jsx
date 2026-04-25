@@ -4,36 +4,31 @@ import MarkdownRenderer from '../../components/common/MarkdownRenderer';
 import api from '../../config/axiosconfig';
 
 const MODEL_UI = {
-  general: {
-    name: 'Llama 4 Scout',
-    provider: 'Meta',
-    bestFor: 'Fast everyday Q&A',
-    accent: 'from-sky-500 to-cyan-500',
-    strengths: ['Speed', 'Clarity', 'Low latency'],
-    logoPath: '/meta-color.svg',
-  },
-  code: {
-    name: 'Codestral 2508',
-    provider: 'Mistral AI',
-    bestFor: 'Coding and technical prompts',
-    accent: 'from-amber-500 to-orange-500',
-    strengths: ['Code help', 'Refactors', 'Technical depth'],
-    logoPath: '/mistral-color.svg',
-  },
-  complex: {
-    name: 'DeepSeek R1',
-    provider: 'DeepSeek',
-    bestFor: 'Deep reasoning',
+  normal: {
+    name: 'Nemotron 3 Super 120B',
+    provider: 'NVIDIA',
+    bestFor: 'Balanced quality for everyday chat',
     accent: 'from-emerald-500 to-teal-500',
-    strengths: ['Reasoning', 'Structure', 'Step-by-step'],
-    logoPath: '/deepseek-color.svg',
+    strengths: ['Balanced', 'Clear answers', 'Reliable'],
+    logoPath: '/nvidia-color.svg',
+    logoPlate:
+      'bg-[radial-gradient(circle_at_25%_20%,rgba(16,185,129,0.35),transparent_58%),radial-gradient(circle_at_80%_85%,rgba(20,184,166,0.28),transparent_62%),linear-gradient(135deg,rgba(236,253,245,1)_0%,rgba(240,253,250,1)_100%)] ring-emerald-200/80',
+  },
+  fast: {
+    name: 'GPT-OSS 120B',
+    provider: 'OpenAI',
+    bestFor: 'Fast responses for quick tasks',
+    accent: 'from-sky-500 to-cyan-500',
+    strengths: ['Speed', 'Low latency', 'Quick drafts'],
+    logoPath: '/openai.svg',
+    logoPlate:
+      'bg-[radial-gradient(circle_at_30%_18%,rgba(56,189,248,0.35),transparent_56%),radial-gradient(circle_at_78%_82%,rgba(34,211,238,0.28),transparent_60%),linear-gradient(135deg,rgba(239,246,255,1)_0%,rgba(236,254,255,1)_100%)] ring-sky-200/80',
   },
 };
 
 const FALLBACK_MODELS = [
-  { modelType: 'general', modelId: 'meta-llama/llama-4-scout' },
-  { modelType: 'code', modelId: 'mistralai/codestral-2508' },
-  { modelType: 'complex', modelId: 'deepseek/deepseek-r1' },
+  { modelType: 'normal', modelId: 'nvidia/nemotron-3-super-120b-a12b:free' },
+  { modelType: 'fast', modelId: 'openai/gpt-oss-120b:free' },
 ];
 
 const toDisplayModel = ({ modelType, modelId }) => {
@@ -48,6 +43,7 @@ const toDisplayModel = ({ modelType, modelId }) => {
     accent: meta.accent || 'from-indigo-500 to-blue-500',
     strengths: meta.strengths || ['General use'],
     logoPath: meta.logoPath || '/vite.svg',
+    logoPlate: meta.logoPlate || 'bg-slate-50 ring-slate-200',
   };
 };
 
@@ -63,7 +59,7 @@ const GeneralChat = () => {
       role: 'assistant',
       content:
         'Welcome to General Chat. Select any open-source model and ask questions not tied to documents. I can answer in markdown, structured lists, and concise explanations.',
-      modelType: 'general',
+      modelType: 'normal',
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -79,7 +75,7 @@ const GeneralChat = () => {
         const { data } = await api.get('/ai/models');
         const modelList = (data?.data?.models || FALLBACK_MODELS).map(toDisplayModel);
         setModels(modelList);
-        setSelectedModelId((prev) => prev || modelList[0]?.id || 'general');
+        setSelectedModelId((prev) => prev || modelList[0]?.id || 'normal');
       } catch {
         setModels(FALLBACK_MODELS.map(toDisplayModel));
       }
@@ -186,7 +182,7 @@ const GeneralChat = () => {
                   >
                     <div className='flex items-start justify-between gap-2'>
                       <div className='min-w-0 flex items-start gap-2'>
-                        <span className='mt-0.5 rounded-md bg-slate-100 p-1'>
+                        <span className={`mt-0.5 rounded-md p-1 ring-1 ${model.logoPlate || 'bg-slate-100 ring-slate-200'}`}>
                           <img src={model.logoPath} alt={`${model.name} logo`} className='h-3.5 w-3.5 object-contain' />
                         </span>
                         <div className='min-w-0'>
@@ -204,8 +200,9 @@ const GeneralChat = () => {
 
           <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3'>
             <div className='flex items-center gap-3'>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} shadow-md`}>
-                <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-5 w-5 object-contain' />
+              <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl ring-1 shadow-md ${selectedModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
+                <div className={`pointer-events-none absolute inset-0 rounded-xl bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} opacity-15`} />
+                <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='relative h-5 w-5 object-contain' />
               </div>
               <div>
                 <p className='text-sm font-semibold text-slate-900'>{selectedModel?.name}</p>
@@ -241,8 +238,9 @@ const GeneralChat = () => {
                       className={`flex items-start gap-3 my-2 ${isUser ? 'justify-end' : 'justify-start'} animate-[fadeIn_0.18s_ease-out]`}
                     >
                       {!isUser && (
-                        <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${itemModel?.accent || 'from-indigo-500 to-blue-500'} shadow-sm`}>
-                          <img src={itemModel?.logoPath || '/vite.svg'} alt={`${itemModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
+                        <div className={`relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${itemModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
+                          <div className={`pointer-events-none absolute inset-0 rounded-lg bg-linear-to-br ${itemModel?.accent || 'from-indigo-500 to-blue-500'} opacity-18`} />
+                          <img src={itemModel?.logoPath || '/vite.svg'} alt={`${itemModel?.name || 'Model'} logo`} className='relative h-4 w-4 object-contain' />
                         </div>
                       )}
 
@@ -281,8 +279,9 @@ const GeneralChat = () => {
 
                 {isResponding && (
                   <div className='flex items-center gap-3'>
-                    <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} shadow-sm`}>
-                      <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
+                    <div className={`relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 shadow-sm ${selectedModel?.logoPlate || 'bg-slate-50 ring-slate-200'}`}>
+                      <div className={`pointer-events-none absolute inset-0 rounded-lg bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} opacity-18`} />
+                      <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='relative h-4 w-4 object-contain' />
                     </div>
                     <div className='inline-flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white/95 px-4 py-3 shadow-sm'>
                       <span className='h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]' />

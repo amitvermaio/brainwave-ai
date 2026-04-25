@@ -2,24 +2,19 @@ import OpenAI from 'openai';
 import config from '../config/config.js';
 
 export const MODELS = {
-  general: 'meta-llama/llama-4-scout',
-  code: 'mistralai/codestral-2508',
-  complex: 'deepseek/deepseek-r1'
+  normal: 'nvidia/nemotron-3-super-120b-a12b:free',  
+  fast: 'openai/gpt-oss-120b:free',                    
 }
 
 const SYSTEM_PROMPTS = {
-  general: 'You are Brainwave AI, a helpful and concise assistant.',
-  code: 'You are Brainwave AI, an expert coding assistant. Provide clean, well-commented code.',
-  complex: 'You are Brainwave AI, a deep-reasoning assistant. Think step by step.',
+  normal: `You are Brainwave AI — friendly and smart. Keep answers short, clear, and easy to read. Only answer what's asked. Use simple words and a line break between points. Leave the user wanting to explore more, not overwhelmed.`,
+
+  fast: `You are Brainwave AI — quick and clear. Answer only what's asked, nothing extra. Short sentences, easy words, clean format.`,
 };
 
 const openai = new OpenAI({
   baseURL: config.openrouterUrlEndpoint,
   apiKey: config.openrouterApiKey,
-  defaultHeaders: {
-    "HTTP-Referer": config.frontendUrl,
-    "X-OpenRouter-Title": "Brainwave AI",
-  }
 });
 
 const history = [];
@@ -31,16 +26,16 @@ export const getAvailableModels = () => {
   }));
 };
 
-export const generateResponseFromModel = async (query, modelType = 'general') => {
+export const generateResponseFromModel = async (query, modelType = 'normal') => {
   try {
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPTS[modelType] ?? SYSTEM_PROMPTS.general },
+      { role: 'system', content: SYSTEM_PROMPTS[modelType] ?? SYSTEM_PROMPTS.normal },
       ...history,
       { role: 'user', content: query }
     ];
 
     const completion = await openai.chat.completions.create({
-      model: MODELS[modelType] || MODELS.general,
+      model: MODELS[modelType] || MODELS.normal,
       messages: messages,
       max_tokens: 2048,
       temperature: 0.9,
