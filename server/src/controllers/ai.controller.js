@@ -5,6 +5,7 @@ import Quiz from '../models/quiz.model.js';
 import AppError from '../utils/AppError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { getRelevantChunks, buildContext, runChain } from '../services/ai.service.js';
+import { generateResponseFromModel, getAvailableModels } from '../services/chat.service.js';
 
 // @desc Generate Flashcard from document
 export const generateFlashcards = async (req, res, next) => {
@@ -347,3 +348,33 @@ export const getChatHistory = async (req, res, next) => {
     next(error);
   }
 }
+
+export const generateResponse = async (req, res, next) => {
+  const { query, modelType } = req.body;
+
+  try {
+    const response = await generateResponseFromModel(query, modelType);
+
+    res.status(200).json(new ApiResponse(
+      200,
+      { response },
+      'Response generated successfully'
+    ));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export const listGeneralChatModels = async (req, res, next) => {
+  try {
+    const models = getAvailableModels();
+
+    res.status(200).json(new ApiResponse(
+      200,
+      { models },
+      'General chat models retrieved successfully'
+    ));
+  } catch (error) {
+    next(error);
+  }
+};

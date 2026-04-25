@@ -73,6 +73,7 @@ const AiActions = () => {
                 AI Assistant
               </h3>
               <div className="flex items-center gap-2 mt-1">
+                <img src='/gemini-color.svg' alt='Gemini logo' className='w-4 h-4 object-contain' />
 
                 <p className="text-xs font-medium text-slate-600 tracking-wide">
                   Powered by <span className="text-slate-900 font-semibold">Google Gemini</span>

@@ -1,71 +1,117 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, BrainCircuit, CheckCircle2, Send, Sparkles } from 'lucide-react';
+import { Bot, Check, CheckCircle2, Copy, Send, Sparkles } from 'lucide-react';
 import MarkdownRenderer from '../../components/common/MarkdownRenderer';
+import api from '../../config/axiosconfig';
 
-const MODELS = [
-  {
-    id: 'mistral-7b-instruct',
-    name: 'Mistral 7B Instruct',
-    provider: 'Mistral AI',
-    bestFor: 'Fast everyday Q&A',
-    description: 'Great for quick summaries, brainstorming, and concise explanations.',
-    accent: 'from-sky-500 to-cyan-500',
-    strengths: ['Speed', 'Clean answers', 'Lower latency'],
-  },
-  {
-    id: 'llama-3-8b-instruct',
-    name: 'Llama 3 8B Instruct',
+const MODEL_UI = {
+  general: {
+    name: 'Llama 4 Scout',
     provider: 'Meta',
-    bestFor: 'Balanced reasoning',
-    description: 'Strong all-rounder for deeper reasoning and structured step-by-step replies.',
-    accent: 'from-emerald-500 to-teal-500',
-    strengths: ['Reasoning', 'Structure', 'Versatility'],
+    bestFor: 'Fast everyday Q&A',
+    accent: 'from-sky-500 to-cyan-500',
+    strengths: ['Speed', 'Clarity', 'Low latency'],
+    logoPath: '/meta-color.svg',
   },
-  {
-    id: 'qwen-2.5-7b-instruct',
-    name: 'Qwen 2.5 7B Instruct',
-    provider: 'Alibaba',
+  code: {
+    name: 'Codestral 2508',
+    provider: 'Mistral AI',
     bestFor: 'Coding and technical prompts',
-    description: 'Performs well on technical tasks, code explanations, and API-oriented questions.',
     accent: 'from-amber-500 to-orange-500',
-    strengths: ['Code help', 'Math', 'Technical depth'],
+    strengths: ['Code help', 'Refactors', 'Technical depth'],
+    logoPath: '/mistral-color.svg',
   },
+  complex: {
+    name: 'DeepSeek R1',
+    provider: 'DeepSeek',
+    bestFor: 'Deep reasoning',
+    accent: 'from-emerald-500 to-teal-500',
+    strengths: ['Reasoning', 'Structure', 'Step-by-step'],
+    logoPath: '/deepseek-color.svg',
+  },
+};
+
+const FALLBACK_MODELS = [
+  { modelType: 'general', modelId: 'meta-llama/llama-4-scout' },
+  { modelType: 'code', modelId: 'mistralai/codestral-2508' },
+  { modelType: 'complex', modelId: 'deepseek/deepseek-r1' },
 ];
 
-const buildMockResponse = (model, userQuestion) => {
-  return `### ${model.name} response\n\nYou asked: **${userQuestion}**\n\nI am optimized for **${model.bestFor}**. Here is a polished starter answer:\n\n1. Clarify the goal in one sentence.\n2. Break the topic into small sub-parts.\n3. Use examples to validate understanding.\n4. End with an action checklist for execution.\n\n#### Suggested next move\nPick one sub-part and ask me for a deep dive with examples.`;
+const toDisplayModel = ({ modelType, modelId }) => {
+  const meta = MODEL_UI[modelType] || {};
+  return {
+    id: modelType,
+    modelType,
+    modelId,
+    name: meta.name || modelId,
+    provider: meta.provider || modelId?.split('/')[0] || 'Open Source',
+    bestFor: meta.bestFor || 'General chat',
+    accent: meta.accent || 'from-indigo-500 to-blue-500',
+    strengths: meta.strengths || ['General use'],
+    logoPath: meta.logoPath || '/vite.svg',
+  };
 };
 
 const GeneralChat = () => {
-  const [selectedModelId, setSelectedModelId] = useState(MODELS[1].id);
+  const [models, setModels] = useState(FALLBACK_MODELS.map(toDisplayModel));
+  const [selectedModelId, setSelectedModelId] = useState(FALLBACK_MODELS[0].modelType);
   const [input, setInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState('');
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content:
         'Welcome to General Chat. Select any open-source model and ask questions not tied to documents. I can answer in markdown, structured lists, and concise explanations.',
+      modelType: 'general',
       createdAt: new Date().toISOString(),
     },
   ]);
 
   const selectedModel = useMemo(
-    () => MODELS.find((model) => model.id === selectedModelId) || MODELS[0],
-    [selectedModelId]
+    () => models.find((model) => model.id === selectedModelId) || models[0],
+    [models, selectedModelId]
   );
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const { data } = await api.get('/ai/models');
+        const modelList = (data?.data?.models || FALLBACK_MODELS).map(toDisplayModel);
+        setModels(modelList);
+        setSelectedModelId((prev) => prev || modelList[0]?.id || 'general');
+      } catch {
+        setModels(FALLBACK_MODELS.map(toDisplayModel));
+      }
+    };
+
+    fetchModels();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isResponding]);
 
-  const sendMessage = (questionText) => {
+  const copyMessage = async (messageId, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      window.setTimeout(() => {
+        setCopiedMessageId((prev) => (prev === messageId ? '' : prev));
+      }, 1200);
+    } catch {
+      setCopiedMessageId('');
+    }
+  };
+
+  const sendMessage = async (questionText) => {
     const cleaned = questionText.trim();
-    if (!cleaned || isResponding) return;
+    if (!cleaned || isResponding || !selectedModel) return;
 
     const userMessage = {
       role: 'user',
       content: cleaned,
+      modelType: selectedModel.modelType,
       createdAt: new Date().toISOString(),
     };
 
@@ -73,15 +119,32 @@ const GeneralChat = () => {
     setInput('');
     setIsResponding(true);
 
-    window.setTimeout(() => {
+    try {
+      const { data } = await api.post('/ai/generate-response', {
+        query: cleaned,
+        modelType: selectedModel.modelType,
+      });
+
+      const responseText = data?.data?.response || 'Sorry, I could not generate a response.';
       const assistantMessage = {
         role: 'assistant',
-        content: buildMockResponse(selectedModel, cleaned),
+        content: responseText,
+        modelType: selectedModel.modelType,
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      const fallbackMessage = error?.response?.data?.message || error?.message || 'Failed to connect to AI service.';
+      const assistantMessage = {
+        role: 'assistant',
+        content: `I could not generate a response right now. ${fallbackMessage}`,
+        modelType: selectedModel.modelType,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } finally {
       setIsResponding(false);
-    }, 700);
+    }
   };
 
   const handleSubmit = (event) => {
@@ -103,12 +166,12 @@ const GeneralChat = () => {
                 General AI Chat
               </p>
               <span className='rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600'>
-                UI Demo Mode
+                Live API Mode
               </span>
             </div>
 
             <div className='flex gap-2 overflow-x-auto pb-1'>
-              {MODELS.map((model) => {
+              {models.map((model) => {
                 const selected = model.id === selectedModelId;
                 return (
                   <button
@@ -122,9 +185,14 @@ const GeneralChat = () => {
                     }`}
                   >
                     <div className='flex items-start justify-between gap-2'>
-                      <div className='min-w-0'>
-                        <p className='truncate text-xs font-semibold text-slate-900'>{model.name}</p>
-                        <p className='truncate text-[11px] text-slate-500'>Best for: {model.bestFor}</p>
+                      <div className='min-w-0 flex items-start gap-2'>
+                        <span className='mt-0.5 rounded-md bg-slate-100 p-1'>
+                          <img src={model.logoPath} alt={`${model.name} logo`} className='h-3.5 w-3.5 object-contain' />
+                        </span>
+                        <div className='min-w-0'>
+                          <p className='truncate text-xs font-semibold text-slate-900'>{model.name}</p>
+                          <p className='truncate text-[11px] text-slate-500'>Best for: {model.bestFor}</p>
+                        </div>
                       </div>
                       {selected && <CheckCircle2 className='h-4 w-4 shrink-0 text-teal-600' />}
                     </div>
@@ -136,16 +204,16 @@ const GeneralChat = () => {
 
           <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3'>
             <div className='flex items-center gap-3'>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${selectedModel.accent} shadow-md`}>
-                <BrainCircuit className='h-5 w-5 text-white' />
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} shadow-md`}>
+                <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-5 w-5 object-contain' />
               </div>
               <div>
-                <p className='text-sm font-semibold text-slate-900'>{selectedModel.name}</p>
-                <p className='text-xs text-slate-500'>Best for: {selectedModel.bestFor} • {selectedModel.provider}</p>
+                <p className='text-sm font-semibold text-slate-900'>{selectedModel?.name}</p>
+                <p className='text-xs text-slate-500'>Best for: {selectedModel?.bestFor} • {selectedModel?.provider}</p>
               </div>
             </div>
             <div className='flex items-center gap-1.5'>
-              {selectedModel.strengths.map((strength) => (
+              {(selectedModel?.strengths || []).map((strength) => (
                 <span
                   key={strength}
                   className='rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600'
@@ -154,7 +222,7 @@ const GeneralChat = () => {
                 </span>
               ))}
             </div>
-            <div className={`hidden items-center gap-2 rounded-xl bg-linear-to-r ${selectedModel.accent} px-3 py-1.5 text-white shadow-sm sm:inline-flex`}>
+            <div className={`hidden items-center gap-2 rounded-xl bg-linear-to-r ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} px-3 py-1.5 text-white shadow-sm sm:inline-flex`}>
               <Bot className='h-3.5 w-3.5' />
               <span className='text-xs font-semibold'>Open Source</span>
             </div>
@@ -164,31 +232,48 @@ const GeneralChat = () => {
             <div className='mx-auto flex max-w-4xl flex-col gap-4'>
                 {messages.map((messageItem, index) => {
                   const isUser = messageItem.role === 'user';
+                  const itemModel = models.find((model) => model.modelType === messageItem.modelType) || selectedModel || models[0];
+                  const messageId = `${messageItem.createdAt}-${index}`;
+                  const copied = copiedMessageId === messageId;
                   return (
                     <article
-                      key={`${messageItem.createdAt}-${index}`}
-                      className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'} animate-[fadeIn_0.18s_ease-out]`}
+                      key={messageId}
+                      className={`flex items-start gap-3 my-2 ${isUser ? 'justify-end' : 'justify-start'} animate-[fadeIn_0.18s_ease-out]`}
                     >
                       {!isUser && (
-                        <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${selectedModel.accent} shadow-sm`}>
-                          <Bot className='h-4 w-4 text-white' />
+                        <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${itemModel?.accent || 'from-indigo-500 to-blue-500'} shadow-sm`}>
+                          <img src={itemModel?.logoPath || '/vite.svg'} alt={`${itemModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
                         </div>
                       )}
 
-                      <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm sm:max-w-[75%] ${
-                          isUser
-                            ? 'rounded-br-md bg-linear-to-r from-slate-900 to-slate-800 text-white shadow-slate-300/30'
-                            : 'rounded-bl-md border border-slate-200/80 bg-white/95 text-slate-800 shadow-slate-200/60'
-                        }`}
-                      >
-                        {isUser ? (
-                          <p>{messageItem.content}</p>
-                        ) : (
-                          <div className='prose prose-sm max-w-none prose-slate'>
-                            <MarkdownRenderer content={messageItem.content} />
-                          </div>
-                        )}
+                      <div className={`flex max-w-[85%] flex-col ${isUser ? 'items-end' : 'items-start'} sm:max-w-[75%]`}>
+                        <div
+                          className={`max-w-lg rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
+                            isUser
+                              ? 'bg-linear-to-br from-emerald-500 to-teal-500 text-white rounded-br-md'
+                              : 'bg-white border border-slate-200/60 text-slate-800 rounded-bl-md'
+                          }`}
+                        >
+                          {isUser ? (
+                            <p>{messageItem.content}</p>
+                          ) : (
+                            <div className='prose prose-sm max-w-none prose-slate'>
+                              <MarkdownRenderer content={messageItem.content} />
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type='button'
+                          onClick={() => copyMessage(messageId, messageItem.content)}
+                          className={`mt-1 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition-colors ${
+                            isUser
+                              ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
+                          {copied ? 'Copied' : 'Copy'}
+                        </button>
                       </div>
                     </article>
                   );
@@ -196,8 +281,8 @@ const GeneralChat = () => {
 
                 {isResponding && (
                   <div className='flex items-center gap-3'>
-                    <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${selectedModel.accent} shadow-sm`}>
-                      <Bot className='h-4 w-4 text-white' />
+                    <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br ${selectedModel?.accent || 'from-indigo-500 to-blue-500'} shadow-sm`}>
+                      <img src={selectedModel?.logoPath || '/vite.svg'} alt={`${selectedModel?.name || 'Model'} logo`} className='h-4 w-4 object-contain' />
                     </div>
                     <div className='inline-flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white/95 px-4 py-3 shadow-sm'>
                       <span className='h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]' />
@@ -222,7 +307,7 @@ const GeneralChat = () => {
               />
               <button
                 type='submit'
-                disabled={!input.trim() || isResponding}
+                disabled={!input.trim() || isResponding || !selectedModel}
                 className='shrink-0 w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl flex items-center justify-center transition-colors duration-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:opacity-50'
               >
                 <Send className='w-5 h-5 text-white' strokeWidth={2} />

@@ -6,6 +6,8 @@ import {
   chat,
   explainConcept,
   getChatHistory,
+  generateResponse,
+  listGeneralChatModels
 } from '../controllers/ai.controller.js';
 import authenticate from '../middlewares/auth.middleware.js';
 import {
@@ -31,5 +33,7 @@ router.post('/generate-summary', generateLimiter, generateSummaryRules, generate
 router.post('/chat', chatLimiter, chatRules, chat);
 router.post('/explain-concept', chatLimiter, explainConceptRules, explainConcept);
 router.get('/chat-history/:documentId', getChatHistoryRules, getChatHistory);
+router.post('/generate-response', chatLimiter, generateResponse);
+router.get('/models', chatLimiter, listGeneralChatModels);
 
 export default router;

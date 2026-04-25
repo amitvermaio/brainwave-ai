@@ -20,6 +20,8 @@ const config = {
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
+  openrouterUrlEndpoint: process.env.OPENROUTER_URL_ENDPOINT || 'https://openrouter.ai/api/v1',
+  openrouterApiKey: process.env.OPENROUTER_API_KEY
 };
 
 export default config;

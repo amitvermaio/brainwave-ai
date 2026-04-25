@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Send, MessageSquare, Sparkles } from 'lucide-react';
+import { Send, MessageSquare, Copy, Check } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ const ChatInterface = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [copiedMessageId, setCopiedMessageId] = useState('');
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -41,6 +42,18 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatHistory]);
+
+  const copyMessage = async (messageId, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      window.setTimeout(() => {
+        setCopiedMessageId((prev) => (prev === messageId ? '' : prev));
+      }, 1200);
+    } catch {
+      setCopiedMessageId('');
+    }
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -77,24 +90,40 @@ const ChatInterface = () => {
 
   const renderMessage = (msg, index) => {
     const isUser = msg.role === 'user';
+    const messageId = `${msg.timestamp || 'msg'}-${index}`;
+    const copied = copiedMessageId === messageId;
     return (
       <div key={index} className={`flex items-start gap-3 my-4 ${isUser ? 'justify-end' : ''}`}>
         {!isUser && (
           <div className='w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/20 flex items-center justify-center shrink-0'>
-            <Sparkles className='w-4 h-4 text-white' strokeWidth={2} />
+            <img src='/gemini-color.svg' alt='Gemini logo' className='w-4 h-4 object-contain' />
           </div>
         )}
-        <div className={`max-w-lg p-4 rounded-2xl shadow-sm ${isUser
-          ? 'bg-linear-to-br from-emerald-500 to-teal-500 text-white rounded-br-md'
-          : 'bg-white border border-slate-200/60 text-slate-800 rounded-bl-md'
-          }`}>
-          {isUser ? (
-            <p className='text-sm leading-relaxed'>{msg.content}</p>
-          ) : (
-            <div className='prose prose-sm max-w-none prose-slate'>
-              <MarkdownRenderer content={msg.content} />
-            </div>
-          )}
+        <div className={`max-w-lg ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
+          <div className={`w-full p-4 rounded-2xl shadow-sm ${isUser
+            ? 'bg-linear-to-br from-emerald-500 to-teal-500 text-white rounded-br-md'
+            : 'bg-white border border-slate-200/60 text-slate-800 rounded-bl-md'
+            }`}>
+            {isUser ? (
+              <p className='text-sm leading-relaxed'>{msg.content}</p>
+            ) : (
+              <div className='prose prose-sm max-w-none prose-slate'>
+                <MarkdownRenderer content={msg.content} />
+              </div>
+            )}
+          </div>
+          <button
+            type='button'
+            onClick={() => copyMessage(messageId, msg.content)}
+            className={`mt-1 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition-colors ${
+              isUser
+                ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {copied ? <Check className='h-3.5 w-3.5' /> : <Copy className='h-3.5 w-3.5' />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
         </div>
         {isUser && (
           <div className='w-9 h-9 rounded-xl bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-700 font-semibold text-sm shrink-0 shadow-sm'>
@@ -137,7 +166,7 @@ const ChatInterface = () => {
           {loading && (
             <div className='flex items-center gap-3 my-4'>
               <div className='w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/20 flex items-center justify-center shrink-0'>
-                <Sparkles className='w-4 h-4 text-white' strokeWidth={2} />
+                <img src='/gemini-color.svg' alt='Gemini logo' className='w-4 h-4 object-contain' />
               </div>
               <div className='flex items-center gap-2 px-4 py-3 rounded-2xl rounded-bl-md bg-white border border-slate-200'>
                 <div className='flex gap-1'>
